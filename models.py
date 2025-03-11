@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
-from db.database import engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import datetime
@@ -14,7 +13,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     balance = Column(Float, default=0.0)
 #relationship
-        investments = relationship("Investment", back_populates="user")
+    investments = relationship("Investment", back_populates="user")
 class Investment(Base):
     __tablename__ = 'investments'
 
@@ -23,4 +22,4 @@ class Investment(Base):
     amount = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
 #relationship
-         user = relationship("User", back_populates="investments")
+    user = relationship("User", back_populates="investments")
