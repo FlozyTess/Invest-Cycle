@@ -13,7 +13,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     balance = Column(Float, default=0.0)
 #relationship
-
+        investments = relationship("Investment", back_populates="user")
 class Investment(Base):
     __tablename__ = 'investments'
 
@@ -21,3 +21,5 @@ class Investment(Base):
     name = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
+#relationship
+         user = relationship("User", back_populates="investments")
