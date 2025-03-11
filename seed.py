@@ -11,7 +11,7 @@ def user_exists(email):
 
 #Add users if they dont exist
 if not user_exists(email="joy@outlook.com"):
-    user1 = User(name="Joy",email="joy@outlook.com",balance=3000)
+    user1 = User(name="Joy",email="joy@outlook.com",balance=3000.00)
     session.add(user1)
 
 if not user_exists(email="gabby@gmail.com"):
