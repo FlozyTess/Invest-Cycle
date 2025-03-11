@@ -12,14 +12,20 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     balance = Column(Float, default=0.0)
+    reliability_score = Column(Float, default=100.0)  # Users start with a perfect score
+
 #relationship
-    investments = relationship("Investment", back_populates="user")
-class Investment(Base):
-    __tablename__ = 'investments'
+    groups = relationship("GroupMember", back_populates="user")
+    contributions = relationship("Contribution", back_populates="user")
+    payouts = relationship("Payout", back_populates="user")
+
+class Contribution(Base):
+    __tablename__ = 'contributions'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    amount = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
+    group_id = Column(Integer, ForeignKey('groups.id'))
+    amount = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 #relationship
-    user = relationship("User", back_populates="investments")
+    user = relationship("User", back_populates="contributions")
