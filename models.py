@@ -12,3 +12,12 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     balance = Column(Float, default=0.0)
+#relationship
+
+class Investment(Base):
+    __tablename__ = 'investments'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'))
