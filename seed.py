@@ -5,45 +5,46 @@ from models import User, Group, GroupMember, Contribution, Payout
 Session = sessionmaker(bind=engine)
 session = Session()
 
-#checks if user exists
-def user_exists(email):
-    return session.query(User).filter_by(email=email).first() is not None
+# Function to get or create a user
+def get_or_create_user(name, email, balance, reliability_score):
+    user = session.query(User).filter_by(email=email).first()
+    if not user:
+        user = User(name=name, email=email, balance=balance, reliability_score=reliability_score)
+        session.add(user)
+        session.commit()
+    return user  # Always returns a valid user object
 
-#Add users if they dont exist
-if not user_exists(email="joy@outlook.com"):
-    user1 = User(name="Joy",email="joy@outlook.com",balance=3000.00)
-    session.add(user1)
+# Ensure users exist
+user1 = get_or_create_user("Joy", "joy@outlook.com", 3000.00, 100.0)
+user2 = get_or_create_user("Gabby", "gabby@gmail.com", 5000.00, 100.0)
 
-if not user_exists(email="gabby@gmail.com"):
-    user2 = User(name="Gabby",email="gabby@gmail.com",balance=5000.00)
-    session.add(user2)
-
+# Get or create the group
+group1 = session.query(Group).filter_by(name="Alpha Investors").first()
+if not group1:
+    group1 = Group(name="Alpha Investors", contribution_amount=1000.00)
+    session.add(group1)
     session.commit()
 
-# Fetch users after committing
-user1 = session.query(User).filter_by(email="joy@outlook.com").first()
-user2 = session.query(User).filter_by(email="gabby@gmail.com").first()    
+# Add users to the group if they are not already members
+existing_members = session.query(GroupMember).filter(GroupMember.group_id == group1.id).all()
+existing_user_ids = {member.user_id for member in existing_members}
 
-#Add Investment group
-group1 = Group(name="Alpha Investors", contribution_amount=1000.00)
-session.add(group1)
-session.commit()
+memberships_to_add = []
+if user1.id not in existing_user_ids:
+    memberships_to_add.append(GroupMember(user_id=user1.id, group_id=group1.id, is_active=True))
+if user2.id not in existing_user_ids:
+    memberships_to_add.append(GroupMember(user_id=user2.id, group_id=group1.id, is_active=True))
 
-# Fetch group
-group1 = session.query(Group).filter_by(name="Alpha Investors").first()
-
-# Add users to the group
-membership1 = GroupMember(user_id=user1.id, group_id=group1.id, is_active=True)
-membership2 = GroupMember(user_id=user2.id, group_id=group1.id, is_active=True)
-
-session.add_all([membership1, membership2])
-session.commit()
+if memberships_to_add:
+    session.add_all(memberships_to_add)
+    session.commit()
 
 # Add contributions
-contribution1 = Contribution(user_id=user1.id, group_id=group1.id, amount=1000.00)
-contribution2 = Contribution(user_id=user2.id, group_id=group1.id, amount=1000.00)
-
-session.add_all([contribution1, contribution2])
+contributions_to_add = [
+    Contribution(user_id=user1.id, group_id=group1.id, amount=1000.00),
+    Contribution(user_id=user2.id, group_id=group1.id, amount=1000.00),
+]
+session.add_all(contributions_to_add)
 session.commit()
 
 # Assign a payout (assuming a rotating order)
@@ -51,6 +52,6 @@ payout1 = Payout(user_id=user1.id, group_id=group1.id, amount=2000.00)  # Joy ge
 session.add(payout1)
 session.commit()
 
-print("data inserted successfully!")
+print("Data inserted successfully!")
 
 session.close()
