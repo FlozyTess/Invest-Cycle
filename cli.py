@@ -17,7 +17,7 @@ def signup():           # for signing up users
     name = input("Enter your name: ")
     email = input("Enter your email: ")
             # check if email exists 
- existing_user = session.query(User).filter_by(email=email).first()
+    existing_user = session.query(User).filter_by(email=email).first()
     if existing_user:
         Print("Email already in use. Please log in.")
         return
@@ -27,7 +27,7 @@ def signup():           # for signing up users
     new_user = User(name=name, email=email, balance=0.0, reliability_score=100.0, password=hashed_pw)
     session.add(new_user)
     session.commit()
-        print("Account created successfully")
+    print("Account created successfully")
 
 def login():
     email = input("Enter your email: ")
@@ -65,5 +65,5 @@ def main():
             print("Invalid choice! Please select again.")
 
     if __name__ == "__main__":
-    main()
+        main()
 

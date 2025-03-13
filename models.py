@@ -48,7 +48,8 @@ class GroupMember(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     group_id = Column(Integer, ForeignKey('groups.id'))
     is_active = Column(Boolean, default=True)  # False if user defaults on payments
-    
+    missed_contributions = Column(Integer, default=0)  # Track missed payments
+
     #relationship
     user = relationship("User", back_populates="groups")
     group = relationship("Group", back_populates="members")
