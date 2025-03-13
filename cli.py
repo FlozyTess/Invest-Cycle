@@ -16,4 +16,30 @@ def verify_password(stored_password, entered_password):         # to verify the 
 def signup():           # for signing up users
     name = input("Enter your name: ")
     email = input("Enter your email: ")
+            # check if email exists 
+ existing_user = session.query(User).filter_by(email=email).first()
+    if existing_user:
+        Print("Email already in use. Please log in.")
+        return
+    password = getpass.getpass("Enter your password: ")  # Hides input
+    hashed_pw = hash_password(password)
 
+    new_user = User(name=name, email=email, balance=0.0, reliability_score=100.0, password=hashed_pw)
+    session.add(new_user)
+    session.commit()
+        print("Account created successfully")
+
+def login():
+    email = input("Enter your email: ")
+    user = session.query(User).filter_by(email=email).first()
+
+    if not user:
+        print("No,account found.")
+        return
+    
+    password = getpass.getpass("Enter password: ")
+    
+    if verify_password(user.password, password):
+        print(f"Welcome back, {user.name}!")
+    else:
+        print("Incorrect password")
