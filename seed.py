@@ -1,3 +1,4 @@
+import bcrypt
 from sqlalchemy.orm import sessionmaker
 from db.database import engine
 from models import User, Group, GroupMember, Contribution, Payout
@@ -6,17 +7,28 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 # Function to get or create a user
-def get_or_create_user(name, email, balance, reliability_score):
+def get_or_create_user(name, email, password, balance, reliability_score):
     user = session.query(User).filter_by(email=email).first()
     if not user:
-        user = User(name=name, email=email, balance=balance, reliability_score=reliability_score)
+         # hash the password before storing
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+
+        user = User(
+            name=name,
+            email=email,
+            password=hashed_password.decode('utf-8'),
+            balance=balance, 
+            reliability_score=reliability_score
+            )
+        
         session.add(user)
         session.commit()
-    return user  # Always returns a valid user object
+    return user  # always returns a valid user object
 
 # Ensure users exist
-user1 = get_or_create_user("Joy", "joy@outlook.com", 3000.00, 100.0)
-user2 = get_or_create_user("Gabby", "gabby@gmail.com", 5000.00, 100.0)
+user1 = get_or_create_user("Joy", "joy@outlook.com","securepassword256", 3000.00, 100.0)
+user2 = get_or_create_user("Gabby", "gabby@gmail.com","strongpassword123",5000.00, 100.0)
 
 # Get or create the group
 group1 = session.query(Group).filter_by(name="Alpha Investors").first()
