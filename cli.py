@@ -43,3 +43,27 @@ def login():
         print(f"Welcome back, {user.name}!")
     else:
         print("Incorrect password")
+        
+        #cli menu
+def main():
+    while True:
+        print("\n=== Invest Cycle CLI ===")
+        print("1. Sign Up")
+        print("2. Log In")
+        print("3. Exit")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            signup()
+        elif choice == "2":
+            login()
+        elif choice == "3":
+            print("Great...")
+            break
+        else:
+            print("Invalid choice! Please select again.")
+
+    if __name__ == "__main__":
+    main()
+
