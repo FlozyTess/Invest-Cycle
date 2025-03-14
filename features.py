@@ -18,8 +18,7 @@ def add_contribution(user_id, group_id, amount):
     if not existing_contribution:
         contribution = Contribution(user_id=user_id, group_id=group_id, amount=amount)
         session.add(contribution)
-        session.commit()
-        
+        session.commit()        
         print(f"Contribution of {amount} added for user {user_id} in group {group_id}.")
     else:
         print(f"User {user_id} has already contributed to group {group_id}.")
