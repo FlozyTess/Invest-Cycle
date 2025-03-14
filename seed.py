@@ -2,6 +2,7 @@ import bcrypt
 from sqlalchemy.orm import sessionmaker
 from db.database import engine
 from models import User, Group, GroupMember, Contribution, Payout
+from features import add_contribution, assign_payout
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -23,6 +24,9 @@ def get_or_create_user(name, email, password, balance, reliability_score):
         )
         session.add(user)
         session.commit()
+        print(f"Created new user: {name}")
+    else:
+        print(f"User {name} already exists.")
     return user  # Always returns a valid user object
 
 # Ensure users exist
@@ -35,41 +39,30 @@ if not group1:
     group1 = Group(name="Alpha Investors", contribution_amount=1000.00)
     session.add(group1)
     session.commit()
+    print(f"Created new group: {group1.name}")
+else:
+    print(f"Group '{group1.name}' already exists.")
 
-# Add users to the group if they are not already members
-existing_members = session.query(GroupMember).filter(GroupMember.group_id == group1.id).all()
+# Add users to the group if not already members
+existing_members = session.query(GroupMember).filter_by(group_id=group1.id).all()
 existing_user_ids = {member.user_id for member in existing_members}
 
-memberships_to_add = []
 if user1.id not in existing_user_ids:
-    memberships_to_add.append(GroupMember(user_id=user1.id, group_id=group1.id, is_active=True))
+    session.add(GroupMember(user_id=user1.id, group_id=group1.id, is_active=True))
+    print(f"{user1.name} added to group '{group1.name}'.")
+
 if user2.id not in existing_user_ids:
-    memberships_to_add.append(GroupMember(user_id=user2.id, group_id=group1.id, is_active=True))
+    session.add(GroupMember(user_id=user2.id, group_id=group1.id, is_active=True))
+    print(f"{user2.name} added to group '{group1.name}'.")
 
-if memberships_to_add:
-    session.add_all(memberships_to_add)
-    session.commit()
+session.commit()
 
-# Add contributions if they don't exist
-existing_contributions = session.query(Contribution).filter(Contribution.group_id == group1.id).all()
-existing_contribution_pairs = {(c.user_id, c.group_id) for c in existing_contributions}
+# Add contributions using the function (prevents duplicates)
+add_contribution(user1.id, group1.id, 1000.00)
+add_contribution(user2.id, group1.id, 1000.00)
 
-contributions_to_add = []
-if (user1.id, group1.id) not in existing_contribution_pairs:
-    contributions_to_add.append(Contribution(user_id=user1.id, group_id=group1.id, amount=1000.00))
-if (user2.id, group1.id) not in existing_contribution_pairs:
-    contributions_to_add.append(Contribution(user_id=user2.id, group_id=group1.id, amount=1000.00))
-
-if contributions_to_add:
-    session.add_all(contributions_to_add)
-    session.commit()
-
-# Assign a payout (assuming a rotating order)
-existing_payout = session.query(Payout).filter_by(user_id=user1.id, group_id=group1.id).first()
-if not existing_payout:
-    payout1 = Payout(user_id=user1.id, group_id=group1.id, amount=2000.00)  # Joy gets first payout
-    session.add(payout1)
-    session.commit()
+# Assign payout using the function (prevents duplicates)
+assign_payout(user1.id, group1.id, 2000.00)  # Joy gets first payout
 
 print("Data inserted successfully!")
 session.close()

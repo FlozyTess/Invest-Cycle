@@ -19,12 +19,12 @@ def signup():           # for signing up users
             # check if email exists 
     existing_user = session.query(User).filter_by(email=email).first()
     if existing_user:
-        Print("Email already in use. Please log in.")
+        print("Email already in use. Please log in.")
         return
     password = getpass.getpass("Enter your password: ")  # Hides input
     hashed_pw = hash_password(password)
 
-    new_user = User(name=name, email=email, balance=0.0, reliability_score=100.0, password=hashed_pw)
+    new_user = User(name=name, email=email, balance=0.0, reliability_score=100.0, password=hashed_pw.decode('utf-8'))
     session.add(new_user)
     session.commit()
     print("Account created successfully")
