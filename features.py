@@ -25,20 +25,44 @@ def add_contribution(user_id, group_id, amount):
 
 # Assigned payout 
 def assign_payout(user_id, group_id, amount):
-    """Assigns a payout to a user in a group if not already assigned."""
-    existing_payout = (
+    """Assigns a payout to a user in a group based on rotation."""
+    group_members = (
+        session.query(GroupMember)
+        .filter_by(group_id=group_id, is_active=True)
+        .all()
+    )
+
+    if not group_members:
+        print("No active members in this group.")
+        return
+
+    # Get the last payout in the group
+    last_payout = (
         session.query(Payout)
-        .filter_by(user_id=user_id, group_id=group_id)
+        .filter_by(group_id=group_id)
+        .order_by(Payout.timestamp.desc())
         .first()
     )
 
-    if not existing_payout:
-        payout = Payout(user_id=user_id, group_id=group_id, amount=amount)
-        session.add(payout)
-        session.commit()
-        print(f"Payout of {amount} assigned to user {user_id} in group {group_id}.")
+    if last_payout:
+        # Get the next user in rotation
+        last_user_index = next(
+            (index for index, member in enumerate(group_members) if member.user_id == last_payout.user_id), 
+            -1
+        )
+        next_user_index = (last_user_index + 1) % len(group_members)
     else:
-        print(f"User {user_id} has already received a payout from group {group_id}.")
+        # If no previous payout, start from the first user
+        next_user_index = 0
+
+    next_user = session.query(User).filter_by(id=group_members[next_user_index].user_id).first()
+
+    # Assign payout
+    payout = Payout(user_id=next_user.id, group_id=group_id, amount=amount)
+    session.add(payout)
+    session.commit()
+
+    print(f"Payout of Ksh {amount} assigned successfully to {next_user.name} (ID: {next_user.id}) in group '{group_id}'.")
 
 # Check for missed contributions and defaulters
 def check_and_remove_defaulters(group_id):
