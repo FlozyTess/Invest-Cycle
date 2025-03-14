@@ -83,8 +83,8 @@ def join_group(user):
     session.commit()
     print(f"You joined '{group.name}' successfully!")     
 
-# Add a contribution
 def contribute(user):
+    """Allows a user to contribute to a group."""
     group_name = input("Enter the group name: ")
     group = session.query(Group).filter_by(name=group_name).first()
 
@@ -92,29 +92,57 @@ def contribute(user):
         print("Group not found.")
         return
 
-    amount = float(input(f"Enter the amount to contribute (Ksh {group.contribution_amount} required): "))
+    amount = float(input(f"Enter the amount to contribute (Minimum Ksh {group.contribution_amount}): "))
 
     if amount < group.contribution_amount:
         print(f"Minimum contribution is Ksh {group.contribution_amount}. Please enter a valid amount.")
         return
 
+    existing_contribution = session.query(Contribution).filter_by(user_id=user.id, group_id=group.id).first()
+    if existing_contribution:
+        print("You have already contributed to this group.")
+        return
+
     add_contribution(user.id, group.id, amount)
     print(f"Successfully contributed Ksh {amount} to '{group.name}'.")
 
-# Assign payouts
 def payout(user):
+    """Assigns a payout to the next eligible user in a group."""
     group_name = input("Enter the group name for payout: ")
     group = session.query(Group).filter_by(name=group_name).first()
 
     if not group:
         print("Group not found.")
         return
-    amount = float(input("Enter the payout amount: "))
-    assign_payout(group.id,user.name,amount)
-    print(f"Payout of Ksh {amount} assigned successfully to '{user.name}'for group '{group.name}'.")
 
-# User dashboard after login
+    amount = float(input("Enter the payout amount: "))
+
+    # Fetch active group members
+    group_members = session.query(GroupMember).filter_by(group_id=group.id, is_active=True).all()
+
+    if not group_members:
+        print("No active members in this group.")
+        return
+
+    # Find the last payout recipient
+    last_payout = session.query(Payout).filter_by(group_id=group.id).order_by(Payout.timestamp.desc()).first()
+
+    if last_payout:
+        # Find the next user in rotation
+        last_user_index = next((index for index, member in enumerate(group_members) if member.user_id == last_payout.user_id), -1)
+        next_user_index = (last_user_index + 1) % len(group_members)
+    else:
+        # If no previous payouts, start from the first user
+        next_user_index = 0
+
+    next_user = session.query(User).filter_by(id=group_members[next_user_index].user_id).first()
+
+    # Assign the payout
+    assign_payout(next_user.id, group.id, amount)
+    print(f"Payout of Ksh {amount} assigned successfully to {next_user.name} (ID: {next_user.id}) in group '{group.name}'.")
+
 def user_dashboard(user):
+    """Displays the user dashboard menu."""
     while True:
         print("\nUser Menu")
         print("1. View Profile")
@@ -141,9 +169,8 @@ def user_dashboard(user):
             break
         else:
             print("Invalid choice. Try again.")
-
-# Main CLI menu
 def main():
+    """Main menu of the application."""
     while True:
         print("\nMain Menu")
         print("1. Sign Up")
@@ -157,14 +184,12 @@ def main():
         elif choice == "2":
             user = login()
             if user:
-                user_dashboard(user)  # Redirects logged-in user to dashboard
+                user_dashboard(user)
         elif choice == "3":
             print("Exiting program.")
             break
         else:
             print("Invalid choice. Try again.")
 
-# Ensure the script runs properly
 if __name__ == "__main__":
     main()
-
