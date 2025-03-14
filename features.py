@@ -6,6 +6,23 @@ from models import User, Group, GroupMember, Contribution, Payout
 Session = sessionmaker(bind=engine)
 session = Session()
 
+# Add contributions
+def add_contribution(user_id, group_id, amount):
+    """Adds a contribution for a user in a group if it doesn't already exist."""
+    existing_contribution = (
+        session.query(Contribution)
+        .filter_by(user_id=user_id, group_id=group_id)
+        .first()
+    )
+
+    if not existing_contribution:
+        contribution = Contribution(user_id=user_id, group_id=group_id, amount=amount)
+        session.add(contribution)
+        session.commit()
+        print(f"Contribution of {amount} added for user {user_id} in group {group_id}.")
+    else:
+        print(f"User {user_id} has already contributed to group {group_id}.")
+
 # Check for missed contributions and defaulters
 def check_and_remove_defaulters(group_id):
     members = session.query(GroupMember).filter_by(group_id=group_id, is_active=True).all()
