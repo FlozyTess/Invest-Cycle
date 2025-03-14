@@ -83,6 +83,36 @@ def join_group(user):
     session.commit()
     print(f"You joined '{group.name}' successfully!")     
 
+# Add a contribution
+def contribute(user):
+    group_name = input("Enter the group name: ")
+    group = session.query(Group).filter_by(name=group_name).first()
+
+    if not group:
+        print("Group not found.")
+        return
+
+    amount = float(input(f"Enter the amount to contribute (Ksh {group.contribution_amount} required): "))
+
+    if amount < group.contribution_amount:
+        print(f"Minimum contribution is Ksh {group.contribution_amount}. Please enter a valid amount.")
+        return
+
+    add_contribution(user.id, group.id, amount)
+    print(f"Successfully contributed Ksh {amount} to '{group.name}'.")
+
+# Assign payouts
+def payout(user):
+    group_name = input("Enter the group name for payout: ")
+    group = session.query(Group).filter_by(name=group_name).first()
+
+    if not group:
+        print("Group not found.")
+        return
+
+    assign_payout(group.id)
+    print(f"Payout assigned successfully for group '{group.name}'.")
+
 # User dashboard after login
 def user_dashboard(user):
     while True:
@@ -90,7 +120,9 @@ def user_dashboard(user):
         print("1. View Profile")
         print("2. Create Group")
         print("3. Join Group")
-        print("4. Log Out")
+        print("4. Contribute")
+        print("5. Assign Payout")
+        print("6. Log Out")
 
         choice = input("Choose an option: ")
 
@@ -100,7 +132,11 @@ def user_dashboard(user):
             create_group(user)
         elif choice == "3":
             join_group(user)
-        elif choice == "4":
+        elif user_choice == "4":
+            contribute(user)
+        elif user_choice == "5":
+            payout(user)
+        elif choice == "6":
             print("Logging out...")
             break
         else:
