@@ -2,7 +2,8 @@ import bcrypt
 import getpass
 from sqlalchemy.orm import sessionmaker
 from db.database import engine
-from models import User
+from models import User, Group, GroupMember, Contribution, Payout
+from features import add_contribution, assign_payout
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -35,19 +36,80 @@ def login():
 
     if not user:
         print("No,account found.")
-        return
+        return None
     
     password = getpass.getpass("Enter password: ")
     
-    if verify_password(user.password, password):
+    if verify_password(user.password.encode('utf-8'), password):
         print(f"Welcome back, {user.name}!")
+        return user
     else:
         print("Incorrect password")
-        
-        #cli menu
+        return None
+
+def view_profile(user):     # views profile for user
+    print("\n=== Your Profile ===")
+    print(f"Name: {user.name}")
+    print(f"Email: {user.email}")
+    print(f"Balance: Ksh {user.balance:.2f}")
+    print(f"Reliability Score: {user.reliability_score}")
+    print("====================")
+
+def create_group(user): # creates a group
+    group_name = input("Enter the group name: ")
+    contribution_amount = float(input("Enter contribution amount: ")) 
+    existing_group = session.query(Group).filter_by(name=group_name).first()
+    # checks group existance
+    if existing_group:
+        print("Group already exists.")
+        return
+
+    group = Group(name=group_name, contribution_amount=contribution_amount)
+    session.add(group)
+    session.commit() 
+
+    session.add(GroupMember(user_id=user.id, group_id=group.id, is_active=True))
+    session.commit()
+    print(f"Group '{group_name}' created successfully!") 
+
+def join_group(user): 
+    group_name = input("Enter the group name to join: ")
+    group = session.query(Group).filter_by(name=group_name).first()
+    
+    if not group:
+        print("Group not found.")
+        return
+    session.add(GroupMember(user_id=user.id, group_id=group.id, is_active=True))
+    session.commit()
+    print(f"You joined '{group.name}' successfully!")     
+
+# User dashboard after login
+def user_dashboard(user):
+    while True:
+        print("\nUser Menu")
+        print("1. View Profile")
+        print("2. Create Group")
+        print("3. Join Group")
+        print("4. Log Out")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            view_profile(user)
+        elif choice == "2":
+            create_group(user)
+        elif choice == "3":
+            join_group(user)
+        elif choice == "4":
+            print("Logging out...")
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+# Main CLI menu
 def main():
     while True:
-        print("\n=== Invest Cycle CLI ===")
+        print("\nMain Menu")
         print("1. Sign Up")
         print("2. Log In")
         print("3. Exit")
@@ -57,13 +119,16 @@ def main():
         if choice == "1":
             signup()
         elif choice == "2":
-            login()
+            user = login()
+            if user:
+                user_dashboard(user)  # Redirects logged-in user to dashboard
         elif choice == "3":
-            print("Great...")
+            print("Exiting program.")
             break
         else:
-            print("Invalid choice! Please select again.")
+            print("Invalid choice. Try again.")
 
-    if __name__ == "__main__":
-        main()
+# Ensure the script runs properly
+if __name__ == "__main__":
+    main()
 
