@@ -23,6 +23,23 @@ def add_contribution(user_id, group_id, amount):
     else:
         print(f"User {user_id} has already contributed to group {group_id}.")
 
+# Assigned payout 
+def assign_payout(user_id, group_id, amount):
+    """Assigns a payout to a user in a group if not already assigned."""
+    existing_payout = (
+        session.query(Payout)
+        .filter_by(user_id=user_id, group_id=group_id)
+        .first()
+    )
+
+    if not existing_payout:
+        payout = Payout(user_id=user_id, group_id=group_id, amount=amount)
+        session.add(payout)
+        session.commit()
+        print(f"Payout of {amount} assigned to user {user_id} in group {group_id}.")
+    else:
+        print(f"User {user_id} has already received a payout from group {group_id}.")
+
 # Check for missed contributions and defaulters
 def check_and_remove_defaulters(group_id):
     members = session.query(GroupMember).filter_by(group_id=group_id, is_active=True).all()
