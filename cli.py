@@ -109,9 +109,9 @@ def payout(user):
     if not group:
         print("Group not found.")
         return
-
-    assign_payout(group.id)
-    print(f"Payout assigned successfully for group '{group.name}'.")
+    amount = float(input("Enter the payout amount: "))
+    assign_payout(group.id,amount)
+    print(f"Payout of Ksh {amount} assigned successfully for group '{group.name}'.")
 
 # User dashboard after login
 def user_dashboard(user):
@@ -132,9 +132,9 @@ def user_dashboard(user):
             create_group(user)
         elif choice == "3":
             join_group(user)
-        elif user_choice == "4":
+        elif choice == "4":
             contribute(user)
-        elif user_choice == "5":
+        elif choice == "5":
             payout(user)
         elif choice == "6":
             print("Logging out...")
