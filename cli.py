@@ -110,8 +110,8 @@ def payout(user):
         print("Group not found.")
         return
     amount = float(input("Enter the payout amount: "))
-    assign_payout(group.id,amount)
-    print(f"Payout of Ksh {amount} assigned successfully for group '{group.name}'.")
+    assign_payout(group.id,user.id,amount)
+    print(f"Payout of Ksh {amount} assigned successfully to '{user.id}'for group '{group.name}'.")
 
 # User dashboard after login
 def user_dashboard(user):
