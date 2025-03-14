@@ -19,6 +19,7 @@ def add_contribution(user_id, group_id, amount):
         contribution = Contribution(user_id=user_id, group_id=group_id, amount=amount)
         session.add(contribution)
         session.commit()
+        
         print(f"Contribution of {amount} added for user {user_id} in group {group_id}.")
     else:
         print(f"User {user_id} has already contributed to group {group_id}.")
@@ -73,7 +74,6 @@ def check_and_remove_defaulters(group_id):
 
         # Check if user contributed in the last 30 days
         last_contribution = session.query(Contribution).filter_by(user_id=user.id, group_id=group_id).order_by(Contribution.timestamp.desc()).first()
-
         if not last_contribution or (datetime.datetime.utcnow() - last_contribution.timestamp).days > 30:
             member.missed_contributions += 1
             user.reliability_score -= 20  # Reduce reliability score
